@@ -11,6 +11,9 @@ const sqlite3 = require("sqlite3").verbose();
 const SQLiteStore = require("connect-sqlite3")(session);
 
 const app = express();
+// Prevent 304 "Not Modified" responses for JSON/auth endpoints.
+// Sessions are user-specific; cached responses can break login redirects.
+app.set("etag", false);
 const uploadsDir = path.join(__dirname, "uploads");
 try {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -294,6 +297,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/auth/me", async (req, res) => {
+  // This endpoint is session-specific; disable caching to avoid 304 responses.
+  res.set("Cache-Control", "no-store");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+
   if (!req.session?.userId) return res.status(401).json({ error: "unauthorized" });
   try {
     const user = await dbGet("SELECT id, email, created_at FROM users WHERE id = ?", [
@@ -355,6 +363,9 @@ app.post("/auth/login", async (req, res) => {
 });
 
 app.post("/auth/logout", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
   req.session.destroy(() => {
     res.clearCookie("connect.sid");
     res.json({ ok: true });
