@@ -188,7 +188,11 @@
     let messagesCurrentPage = 1;
 
     async function fetchJson(url, options) {
-      const res = await fetch(url, options);
+      const res = await fetch(url, {
+        // Force cookie-based sessions to work reliably across hosts/proxies.
+        credentials: "same-origin",
+        ...(options || {})
+      });
       if (res.status === 401) {
         window.location.href = "/login";
         throw new Error("unauthorized");
