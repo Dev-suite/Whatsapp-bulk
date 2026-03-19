@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Bulk Dashboard</title>
+  <style>
+    :root{
+      --bg1:#f6f7fb;
+      --bg2:#eef2ff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --primary:#0b1220;
+      --primaryText:#ffffff;
+      --primaryHover:#111827;
+      --secondary:#ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      margin:0;
+      padding:28px 20px;
+      color:var(--text);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    h1,h2 { margin-top:0; }
+    input {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+    }
+    input:focus {
+      outline: none;
+      border-color: #a5b4fc;
+      box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.35);
+    }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .row > * { flex:1; min-width:220px; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td {
+      text-align:left;
+      padding:10px;
+      border-bottom:1px solid #eef2ff;
+      font-size:14px;
+      vertical-align:top;
+    }
+    thead th {
+      background: #eef2ff;
+      color: #3730a3;
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #e0e7ff;
+    }
+    tbody tr:hover { background: #f9fafb; }
+    .muted { color: var(--muted); font-size:13px; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; background:#eef2ff; color:#3730a3; font-weight:600; }
+    .ok { background:#e8f8ee; color:#166534; font-weight:600; }
+    .bad { background:#fdecec; color:#991b1b; font-weight:600; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#fafafa; padding:12px; border-radius:12px; }
+    .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:14px; }
+    .topbarRight { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .topbar h1 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .topbar p strong { color: #3730a3; }
+    .card { transition: transform 120ms ease, box-shadow 120ms ease; }
+    .card:hover { transform: translateY(-1px); box-shadow: 0 14px 40px rgba(15, 23, 42, 0.10); }
+    .btn {
+      cursor:pointer;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      background: var(--primary);
+      color: var(--primaryText);
+      transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+    }
+    .btn:hover:not(:disabled) { background: var(--primaryHover); transform: translateY(-1px); }
+    .btn:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+    .btnPrimary {
+      background: linear-gradient(135deg, #4f46e5 0%, #0b1220 100%);
+      border: 1px solid rgba(79, 70, 229, 0.35);
+    }
+    .btnPrimary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca 0%, #111827 100%);
+    }
+    .btnSecondary {
+      background: var(--secondary);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btnSm { padding: 8px 12px; border-radius: 10px; }
+    .card h2 {
+      margin: 0 0 14px;
+      padding-left: 12px;
+      border-left: 4px solid rgba(79, 70, 229, 0.9);
+    }
+    .card > p { margin-top: -4px; }
+    .pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; }
+    #singleResult, #bulkResult { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>WhatsApp Bulk Dashboard</h1>
+        <p class="muted">Template: <strong>order</strong> · Language: <strong>en</strong> · Header: <strong>video</strong></p>
+      </div>
+      <div class="topbarRight">
+        <span class="muted">Signed in as <strong id="meEmail">...</strong></span>
+        <button class="btn btnSecondary" id="logoutBtn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Send Single Message</h2>
+      <div class="row">
+        <input id="singlePhone" placeholder="Phone number e.g. 08143026332" />
+        <input id="videoUrl" placeholder="Direct public video URL (.mp4)" />
+        <button class="btn btnPrimary" id="singleSendBtn" onclick="sendSingle()">Send</button>
+      </div>
+      <pre id="singleResult"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Bulk Send from CSV</h2>
+      <p class="muted">CSV format: <strong>name,phone</strong></p>
+      <div class="row">
+        <input id="bulkVideoUrl" placeholder="Direct public video URL (.mp4)" />
+        <input id="csvFile" type="file" accept=".csv" />
+        <button class="btn btnPrimary" id="bulkSendBtn" onclick="uploadCsv()">Upload & Send</button>
+      </div>
+      <pre id="bulkResult"></pre>
+    </div>
+
+    <div class="card">
+      <h2>My Sent Messages</h2>
+      <button class="btn btnSecondary btnSm" onclick="loadMessages(1)">Refresh</button>
+      <table id="messagesTable">
+        <thead>
+          <tr><th>Phone</th><th>Status</th><th>Time</th><th>Message ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="pagination" id="messagesPagination">
+        <button class="btn btnSecondary btnSm" id="messagesPrevBtn" onclick="changeMessagesPage(-1)">Prev</button>
+        <span id="messagesPageInfo" class="muted">Page 1</span>
+        <button class="btn btnSecondary btnSm" id="messagesNextBtn" onclick="changeMessagesPage(1)">Next</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Inbox / Replies</h2>
+      <button class="btn btnSecondary btnSm" onclick="loadInbox()">Refresh</button>
+      <table id="inboxTable">
+        <thead>
+          <tr><th>From</th><th>Type</th><th>Message</th><th>Time</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const MESSAGES_PAGE_SIZE = 10;
+    let messagesCurrentPage = 1;
+
+    async function fetchJson(url, options) {
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        window.location.href = "/login";
+        throw new Error("unauthorized");
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        const err = new Error(data?.error || "request_failed");
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    async function hydrateMe() {
+      const data = await fetchJson("/auth/me");
+      document.getElementById("meEmail").textContent = data?.user?.email || "";
+    }
+
+    async function logout() {
+      const btn = document.getElementById("logoutBtn");
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Logging out...";
+      try {
+        await fetchJson("/auth/logout", { method: "POST" });
+        window.location.href = "/login";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    async function sendSingle() {
+      const phone = document.getElementById("singlePhone").value;
+      const videoUrl = document.getElementById("videoUrl").value;
+      const btn = document.getElementById("singleSendBtn");
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = "Sending...";
+      try {
+        const data = await fetchJson("/api/send-single", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, videoUrl })
+        });
+        document.getElementById("singleResult").textContent = JSON.stringify(data, null, 2);
+        loadMessages(1);
+      } catch (err) {
+        const payload = err?.data || { error: String(err?.message || "Error sending message") };
+        document.getElementById("singleResult").textContent = JSON.stringify(payload, null, 2);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    async function uploadCsv() {
+      const file = document.getElementById("csvFile").files[0];
+      const videoUrl = document.getElementById("bulkVideoUrl").value;
+      const btn = document.getElementById("bulkSendBtn");
+      const form = new FormData();
+      form.append("file", file);
+      form.append("videoUrl", videoUrl);
+
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = "Uploading...";
+
+      try {
+        const data = await fetchJson("/api/upload-csv", {
+          method: "POST",
+          body: form
+        });
+        document.getElementById("bulkResult").textContent = JSON.stringify(data, null, 2);
+        loadMessages(1);
+      } catch (err) {
+        const payload = err?.data || { error: String(err?.message || "Error uploading CSV") };
+        document.getElementById("bulkResult").textContent = JSON.stringify(payload, null, 2);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    function updateMessagesPaginationUI(page, totalPages) {
+      const prevBtn = document.getElementById("messagesPrevBtn");
+      const nextBtn = document.getElementById("messagesNextBtn");
+      const info = document.getElementById("messagesPageInfo");
+
+      info.textContent = `Page ${page} of ${totalPages}`;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
+    }
+
+    async function loadMessages(page = 1) {
+      messagesCurrentPage = page;
+      const data = await fetchJson(
+        `/api/my-messages?page=${page}&pageSize=${MESSAGES_PAGE_SIZE}`
+      );
+      const tbody = document.querySelector("#messagesTable tbody");
+      tbody.innerHTML = "";
+
+      const items = data?.items || [];
+      items.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.phone || ""}</td>
+          <td><span class="pill ${item.status === "failed" ? "bad" : "ok"}">${item.status || ""}</span></td>
+          <td>${item.sentAt || item.updatedAt || ""}</td>
+          <td>${item.wamid || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateMessagesPaginationUI(data?.page || page, data?.totalPages || 1);
+    }
+
+    async function changeMessagesPage(delta) {
+      const nextPage = Math.max(1, messagesCurrentPage + delta);
+      await loadMessages(nextPage);
+    }
+
+    async function loadInbox() {
+      const data = await fetchJson("/api/inbox");
+      const tbody = document.querySelector("#inboxTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.from || ""}</td>
+          <td>${item.type || ""}</td>
+          <td>${item.text || ""}</td>
+          <td>${item.time || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    hydrateMe()
+      .then(() => Promise.all([loadMessages(1), loadInbox()]))
+      .catch(() => { });
+  </script>
+</body>
+</html>

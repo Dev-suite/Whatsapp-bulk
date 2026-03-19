@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · WhatsApp Bulk Dashboard</title>
+  <style>
+    :root{
+      --bg1:#f6f7fb;
+      --bg2:#eef2ff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --primary:#0b1220;
+      --primaryHover:#111827;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      margin:0;
+      padding:24px 20px;
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .wrap { max-width: 520px; width:100%; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    h1 { margin:0 0 6px; font-size: 24px; }
+    p { margin:0 0 16px; color:var(--muted); font-size:13px; }
+    input {
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size:14px;
+      box-sizing:border-box;
+      margin-top: 0;
+    }
+    input:focus {
+      outline:none;
+      border-color:#a5b4fc;
+      box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.35);
+    }
+    button {
+      width:100%;
+      cursor:pointer;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      background: linear-gradient(135deg, #4f46e5 0%, #0b1220 100%);
+      color:#fff;
+      margin-top:10px;
+      transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+    }
+    button:hover:not(:disabled) { background: linear-gradient(135deg, #4338ca 0%, #111827 100%); transform: translateY(-1px); }
+    button:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+    .row { display:flex; flex-direction:column; gap:12px; }
+    .error { margin-top:12px; background:#fdecec; color:#991b1b; padding:10px 12px; border-radius:12px; display:none; }
+    .footer { margin-top:14px; font-size:13px; color:var(--muted); }
+    a { color:var(--text); font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div style="font-weight:900; letter-spacing:-0.03em; font-size:16px; background: linear-gradient(135deg, #4f46e5 0%, #0b1220 100%); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom:10px;">
+        WhatsApp Bulk Dashboard
+      </div>
+      <h1>Login</h1>
+      <p>Sign in to access the dashboard.</p>
+      <div class="row">
+        <input id="email" type="email" placeholder="Email" autocomplete="email" />
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+        <button id="loginBtn" onclick="login()">Login</button>
+      </div>
+      <div id="error" class="error"></div>
+      <div class="footer">
+        Don't have an account? <a href="/signup">Create one</a>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setError(msg) {
+      const el = document.getElementById("error");
+      if (!msg) {
+        el.style.display = "none";
+        el.textContent = "";
+        return;
+      }
+      el.style.display = "block";
+      el.textContent = msg;
+    }
+
+    async function login() {
+      setError("");
+      const btn = document.getElementById("loginBtn");
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Logging in...";
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(
+            data.error === "invalid_credentials"
+              ? "Invalid email or password."
+              : "Login failed."
+          );
+          return;
+        }
+        window.location.href = "/";
+      } catch (err) {
+        setError("Network error. Please try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>
