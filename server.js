@@ -14,6 +14,9 @@ const app = express();
 // Prevent 304 "Not Modified" responses for JSON/auth endpoints.
 // Sessions are user-specific; cached responses can break login redirects.
 app.set("etag", false);
+// Render (and other reverse proxies) may set X-Forwarded-* headers.
+// This helps Express correctly interpret security-related request properties.
+app.set("trust proxy", 1);
 const uploadsDir = path.join(__dirname, "uploads");
 try {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -36,7 +39,9 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
+      // Some platforms/proxies can cause Secure cookies to be rejected.
+      // Keeping this false ensures the session cookie is actually stored on Render.
+      secure: false
     }
   })
 );
