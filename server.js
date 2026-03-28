@@ -112,7 +112,7 @@ async function sendTemplateMessage(to, videoLink) {
     to,
     type: "template",
     template: {
-      name: "services",
+      name: "greeting_text",
       language: { code: "en" },
       components: [
         {
@@ -204,6 +204,18 @@ app.post("/api/send-single", requireAuth, async (req, res) => {
     messages.push(record);
     res.json(record);
   } catch (error) {
+    const errorResponse = error?.response?.data || null;
+    const errorStatus = error?.response?.status || null;
+
+    // Helpful for Render logs and for the UI error payload.
+    console.error("send-single failed", {
+      userId: req.session.userId,
+      to,
+      errorStatus,
+      errorResponse: errorResponse ? errorResponse : undefined,
+      message: error?.message
+    });
+
     const record = {
       userId: req.session.userId,
       phone: to,
@@ -212,7 +224,12 @@ app.post("/api/send-single", requireAuth, async (req, res) => {
       sentAt: new Date().toISOString()
     };
     messages.push(record);
-    res.status(500).json(record);
+
+    res.status(500).json({
+      error: "send_failed",
+      record,
+      details: errorResponse || error?.message
+    });
   }
 });
 
