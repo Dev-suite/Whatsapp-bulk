@@ -112,7 +112,7 @@ async function sendTemplateMessage(to, videoLink) {
     to,
     type: "template",
     template: {
-      name: "greeting_text",
+      name: "greeting_text_for_april",
       language: { code: "en" },
       components: [
         {
