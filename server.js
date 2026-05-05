@@ -105,14 +105,14 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function sendTemplateMessage(to, videoLink) {
+async function sendTemplateMessage(to, videoLink, templateName) {
   const url = `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`;
   const payload = {
     messaging_product: "whatsapp",
     to,
     type: "template",
     template: {
-      name: "greeting_text_for_april",
+      name: templateName,
       language: { code: "en" },
       components: [
         {
@@ -185,15 +185,16 @@ app.get("/api/inbox", requireAuth, (req, res) => {
 });
 
 app.post("/api/send-single", requireAuth, async (req, res) => {
-  const { phone, videoUrl } = req.body;
+  const { phone, videoUrl, templateName } = req.body;
   const to = normalizePhone(phone);
+  const template = String(templateName || "").trim();
 
-  if (!to || !videoUrl) {
-    return res.status(400).json({ error: "phone and videoUrl are required" });
+  if (!to || !videoUrl || !template) {
+    return res.status(400).json({ error: "phone, videoUrl and templateName are required" });
   }
 
   try {
-    const data = await sendTemplateMessage(to, videoUrl);
+    const data = await sendTemplateMessage(to, videoUrl, template);
     const record = {
       userId: req.session.userId,
       phone: to,
@@ -235,8 +236,10 @@ app.post("/api/send-single", requireAuth, async (req, res) => {
 
 app.post("/api/upload-csv", requireAuth, upload.single("file"), async (req, res) => {
   const videoUrl = req.body.videoUrl;
+  const templateName = String(req.body.templateName || "").trim();
   if (!req.file) return res.status(400).json({ error: "CSV file is required" });
   if (!videoUrl) return res.status(400).json({ error: "videoUrl is required" });
+  if (!templateName) return res.status(400).json({ error: "templateName is required" });
 
   const results = [];
   const seen = new Set();
@@ -263,7 +266,7 @@ app.post("/api/upload-csv", requireAuth, upload.single("file"), async (req, res)
         const records = await Promise.all(
           batch.map(async (contact) => {
             try {
-              const data = await sendTemplateMessage(contact.phone, videoUrl);
+              const data = await sendTemplateMessage(contact.phone, videoUrl, templateName);
               return {
                 userId: req.session.userId,
                 name: contact.name,

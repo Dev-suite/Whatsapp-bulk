@@ -126,7 +126,7 @@
     <div class="topbar">
       <div>
         <h1>WhatsApp Bulk Dashboard</h1>
-        <p class="muted">Template: <strong>order</strong> · Language: <strong>en</strong> · Header: <strong>video</strong></p>
+        <p class="muted">Language: <strong>en</strong> · Header: <strong>video</strong></p>
       </div>
       <div class="topbarRight">
         <span class="muted">Signed in as <strong id="meEmail">...</strong></span>
@@ -138,6 +138,7 @@
       <h2>Send Single Message</h2>
       <div class="row">
         <input id="singlePhone" placeholder="Phone number e.g. 08143026332" />
+        <input id="singleTemplateName" placeholder="Template name from Meta WhatsApp Dashboard" />
         <input id="videoUrl" placeholder="Direct public video URL (.mp4)" />
         <button class="btn btnPrimary" id="singleSendBtn" onclick="sendSingle()">Send</button>
       </div>
@@ -148,6 +149,7 @@
       <h2>Bulk Send from CSV</h2>
       <p class="muted">CSV format: <strong>name,phone</strong></p>
       <div class="row">
+        <input id="bulkTemplateName" placeholder="Template name from Meta WhatsApp Dashboard" />
         <input id="bulkVideoUrl" placeholder="Direct public video URL (.mp4)" />
         <input id="csvFile" type="file" accept=".csv" />
         <button class="btn btnPrimary" id="bulkSendBtn" onclick="uploadCsv()">Upload & Send</button>
@@ -227,6 +229,7 @@
 
     async function sendSingle() {
       const phone = document.getElementById("singlePhone").value;
+      const templateName = document.getElementById("singleTemplateName").value.trim();
       const videoUrl = document.getElementById("videoUrl").value;
       const btn = document.getElementById("singleSendBtn");
       btn.disabled = true;
@@ -236,7 +239,7 @@
         const data = await fetchJson("/api/send-single", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, videoUrl })
+          body: JSON.stringify({ phone, templateName, videoUrl })
         });
         document.getElementById("singleResult").textContent = JSON.stringify(data, null, 2);
         loadMessages(1);
@@ -251,10 +254,12 @@
 
     async function uploadCsv() {
       const file = document.getElementById("csvFile").files[0];
+      const templateName = document.getElementById("bulkTemplateName").value.trim();
       const videoUrl = document.getElementById("bulkVideoUrl").value;
       const btn = document.getElementById("bulkSendBtn");
       const form = new FormData();
       form.append("file", file);
+      form.append("templateName", templateName);
       form.append("videoUrl", videoUrl);
 
       btn.disabled = true;
